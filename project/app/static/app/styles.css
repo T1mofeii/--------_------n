@@ -19,27 +19,48 @@ main {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    flex-wrap: nowrap; 
-    position: relative
+    flex-wrap: nowrap;
+    position: relative;
+}
+
+.header > .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+}
+
+.logo {
+    max-width: 200px;
+    padding: 10px;
+    margin-right: 20px;
 }
 
 .logo img {
-    max-width: 100px; 
-    height: auto; 
+    max-width: 100%;
+    height: auto;
     display: block;
 }
 
 .nav {
     display: flex;
-    gap: 15px;
+    gap: 20px;
     align-items: center;
+    padding: 10px 20px;
 }
 
 .nav a {
-    margin: 0 10px;
     text-decoration: none;
-    color: black;
-    font-weight: bold;
+    color: #333;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.nav a:hover {
+    color: #007bff;
 }
 
 .burger-menu {
@@ -255,6 +276,51 @@ main {
     background-color: #f8f9fa;
     border-radius: 10px;
     margin-bottom: 2rem;
+}
+
+.footer {
+    background-color: #a8d0e6;
+    padding: 20px;
+    text-align: center;
+    margin-top: auto;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.form-container-box {
+    max-width: 600px;
+    margin: 40px auto;
+    padding: 30px;
+    background-color: #f8f9fa;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+}
+
+.form-container-box h2 {
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.form-container-box p {
+    margin: 20px 0;
+    color: #666;
+}
+
+.button_lk {
+    background-color: #dc3545;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    width: 100%;
+    margin-top: 10px;
+    transition: background-color 0.3s ease;
+}
+
+.button_lk:hover {
+    background-color: #c82333;
 }
 
 @media (max-width: 768px) {

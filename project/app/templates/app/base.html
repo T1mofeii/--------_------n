@@ -9,25 +9,27 @@
 </head>
 <body>
     <header class="header">
-        <div class="logo">
-            <a href="{% url 'index' %}">Городской портал</a>
+        <div class="container">
+            <div class="logo">
+                <img src="{% static 'app/img/black_on_trans.png' %}" alt="Городской портал">
+            </div>
+            <div class="burger-menu">
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+            </div>
+            <nav class="nav">
+                <a href="{% url 'index' %}">Главная</a>
+                <a href="{% url 'create_application' %}">Создать заявку</a>
+                {% if user.is_authenticated %}
+                <a href="{% url 'lk' %}">Личный кабинет</a>
+                <a href="{% url 'logout' %}">Выйти</a>
+                {% else %}
+                <a href="{% url 'authorization' %}">Войти</a>
+                <a href="{% url 'registration' %}">Регистрация</a>
+                {% endif %}
+            </nav>
         </div>
-        <div class="burger-menu">
-            <div class="bar"></div>
-            <div class="bar"></div>
-            <div class="bar"></div>
-        </div>
-        <nav class="nav">
-            <a href="{% url 'index' %}">Главная</a>
-            <a href="{% url 'create_application' %}">Создать заявку</a>
-            {% if user.is_authenticated %}
-            <a href="{% url 'lk' %}">Личный кабинет</a>
-            <a href="{% url 'logout' %}">Выйти</a>
-            {% else %}
-            <a href="{% url 'authorization' %}">Войти</a>
-            <a href="{% url 'registration' %}">Регистрация</a>
-            {% endif %}
-        </nav>
     </header>
 
     <main>
@@ -37,7 +39,7 @@
 
     <footer class="footer">
         <div class="container">
-            <span>© 2025 Городской портал. Все права защищены.</span>
+            <span> 2025 Городской портал. Все права защищены.</span>
         </div>
     </footer>
 
