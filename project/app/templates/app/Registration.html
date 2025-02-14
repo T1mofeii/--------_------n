@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1200">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'app/styles.css' %}">
+    <title>Регистрация</title>
+</head>
+<body>
+    <div class="header">
+        <div class="logo"><img src="{% static 'app/img/black_on_trans.png' %}" alt=""></div>
+        <nav class="nav">
+            <a href="{% url 'index' %}">Главная</a>
+            <a href="{% url 'create_application' %}">Создать заявку</a>
+            {% if user.is_authenticated %}
+                <a href="{% url 'lk' %}">Личный кабинет</a>
+                <a href="{% url 'logout' %}">Выход</a>
+            {% else %}
+                <a href="{% url 'registration' %}">Регистрация</a>
+                <a href="{% url 'authorization' %}">Авторизация</a>
+            {% endif %}
+        </nav>
+        <div class="burger-menu" onclick="toggleMenu()">
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+        </div>
+    </div>
+
+    <div class="content">
+        <div class="form-container-box">
+            <h2 style="font-size: 24px; text-align: center;">Регистрация</h2>
+            <div class="form-container">
+                <form method="post">
+                    {% csrf_token %}
+                    <label for="id_full_name">ФИО</label>
+                    <input type="text" id="id_full_name" name="full_name" placeholder="Введите ваше ФИО" value="{{ form.full_name.value|default_if_none:'' }}">
+                    
+                    <label for="id_username">Логин</label>
+                    <input type="text" id="id_username" name="username" placeholder="Введите ваш логин" value="{{ form.username.value|default_if_none:'' }}">
+                    
+                    <label for="id_email">Email</label>
+                    <input type="email" id="id_email" name="email" placeholder="Введите ваш email" value="{{ form.email.value|default_if_none:'' }}">
+                    
+                    <label for="id_password1">Пароль</label>
+                    <input type="password" id="id_password1" name="password1" placeholder="Введите пароль">
+                    
+                    <label for="id_password2">Подтверждение пароля</label>
+                    <input type="password" id="id_password2" name="password2" placeholder="Подтвердите пароль">
+                    
+                    <label class="checkbox-label">
+                        <input type="checkbox"> Согласие на обработку персональных данных
+                    </label>
+                    <button type="submit" class="button_lk">Зарегистрироваться</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        Политика конфиденциальности
+    </div>
+    <script>
+        function toggleMenu() {
+            const nav = document.querySelector('.nav');
+            nav.classList.toggle('active');
+        }
+    </script>
+</body>
+</html>

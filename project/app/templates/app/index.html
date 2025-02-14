@@ -1,0 +1,59 @@
+{% extends 'app/base.html' %}
+{% load static %}
+
+{% block title %}Главная - Городской портал{% endblock %}
+
+{% block content %}
+<div class="content">
+    <h2>Последние решенные проблемы</h2>
+    
+    <div class="counter-section">
+        <h3>Решено проблем: <span id="solved-counter">{{ solved_count }}</span></h3>
+    </div>
+
+    <div class="cards_index">
+        {% for problem in solved_problems %}
+        <div class="card_index">
+            <div class="image-container">
+                <img src="{{ problem.image_after.url }}" class="image-after" alt="После">
+                <img src="{{ problem.image_before.url }}" class="image-before" alt="До">
+            </div>
+            <div class="card-content">
+                <h5>{{ problem.title }}</h5>
+                <p>{{ problem.get_category_display }}</p>
+                <p>{{ problem.timestamp|date:"d.m.Y H:i" }}</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<audio id="notification-sound" src="{% static 'app/Notif.mp3' %}" preload="auto"></audio>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const counter = document.getElementById('solved-counter');
+    const sound = document.getElementById('notification-sound');
+    let currentCount = parseInt(counter.textContent);
+
+    function updateCounter() {
+        fetch('/api/solved-count/')
+            .then(response => response.json())
+            .then(data => {
+                if (data.count !== currentCount) {
+                    sound.play();
+                    counter.classList.add('animate');
+                    setTimeout(() => counter.classList.remove('animate'), 300);
+                    counter.textContent = data.count;
+                    currentCount = data.count;
+                }
+            });
+    }
+
+    setInterval(updateCounter, 5000);
+});
+</script>
+{% endblock %}

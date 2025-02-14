@@ -1,0 +1,50 @@
+{% extends 'app/base.html' %}
+{% load static %}
+
+{% block title %}Личный кабинет{% endblock %}
+
+{% block content %}
+<div class="content">
+    <div class="user-info">
+        <h2>Личный кабинет</h2>
+        <p>Имя пользователя: {{ user.username }}</p>
+        <p>Email: {{ user.email }}</p>
+        {% if user.phone %}
+        <p>Телефон: {{ user.phone }}</p>
+        {% endif %}
+    </div>
+
+    <div class="requests-box">
+        <h3>Ваши заявки</h3>
+        {% if problems %}
+        <div class="requests">
+            {% for problem in problems %}
+            <div class="request">
+                <h4>{{ problem.title }}</h4>
+                <p class="request-description">{{ problem.description }}</p>
+                <p>Категория: {{ problem.get_category_display }}</p>
+                <p>Дата: {{ problem.timestamp|date:"d.m.Y H:i" }}</p>
+                <p>Статус: {% if problem.is_solved %}Решена{% else %}В обработке{% endif %}</p>
+                <div class="request-images">
+                    {% if problem.image_before %}
+                    <div class="image-container">
+                        <h5>До:</h5>
+                        <img src="{{ problem.image_before.url }}" alt="До" class="request-image">
+                    </div>
+                    {% endif %}
+                    {% if problem.is_solved and problem.image_after %}
+                    <div class="image-container">
+                        <h5>После:</h5>
+                        <img src="{{ problem.image_after.url }}" alt="После" class="request-image">
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p>У вас пока нет заявок. <a href="{% url 'create_application' %}">Создать заявку</a></p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
