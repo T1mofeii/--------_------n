@@ -9,7 +9,19 @@ class CustomUser(AbstractUser):
     def __str__(self):
         return self.username
 
+class Category(models.Model):
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name
+
 class Problem(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'На рассмотрении'),
+        ('approved', 'Одобрена'),
+        ('rejected', 'Отклонена'),
+        ('solved', 'Решена'),
+    ]
     CATEGORY_CHOICES = [
         ('repair', 'Ремонт'),
         ('cleaning', 'Уборка'),
@@ -17,17 +29,20 @@ class Problem(models.Model):
         ('other', 'Другое'),
     ]
     
-    timestamp = models.DateTimeField(default=timezone.now)
+    user = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='problems')
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)
     title = models.CharField(max_length=200)
-    description = models.TextField(verbose_name='Описание проблемы', blank=True, null=True)
-    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
-    image_before = models.ImageField(upload_to='problems/before/')
-    image_after = models.ImageField(upload_to='problems/after/', blank=True, null=True)
+    description = models.TextField(null=True, blank=True)
+    image_before = models.ImageField(upload_to='images/')
+    image_after = models.ImageField(upload_to='images/', null=True, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    rejection_reason = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     is_solved = models.BooleanField(default=False)
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='problems', null=True, blank=True)
     
     class Meta:
-        ordering = ['-timestamp']
+        ordering = ['-created_at']
     
     def __str__(self):
-        return self.title
+        return f"{self.title} - {self.get_status_display()}"

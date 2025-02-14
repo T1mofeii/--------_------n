@@ -1,71 +1,133 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=1200">
-    {% load static %}
-    <link rel="stylesheet" href="{% static 'app/styles.css' %}">
-    <title>Регистрация</title>
-</head>
-<body>
-    <div class="header">
-        <div class="logo"><img src="{% static 'app/img/black_on_trans.png' %}" alt=""></div>
-        <nav class="nav">
-            <a href="{% url 'index' %}">Главная</a>
-            <a href="{% url 'create_application' %}">Создать заявку</a>
-            {% if user.is_authenticated %}
-                <a href="{% url 'lk' %}">Личный кабинет</a>
-                <a href="{% url 'logout' %}">Выход</a>
-            {% else %}
-                <a href="{% url 'registration' %}">Регистрация</a>
-                <a href="{% url 'authorization' %}">Авторизация</a>
-            {% endif %}
-        </nav>
-        <div class="burger-menu" onclick="toggleMenu()">
-            <div class="bar"></div>
-            <div class="bar"></div>
-            <div class="bar"></div>
-        </div>
-    </div>
+{% extends 'app/base.html' %}
+{% load static %}
 
-    <div class="content">
-        <div class="form-container-box">
-            <h2 style="font-size: 24px; text-align: center;">Регистрация</h2>
-            <div class="form-container">
-                <form method="post">
-                    {% csrf_token %}
-                    <label for="id_full_name">ФИО</label>
-                    <input type="text" id="id_full_name" name="full_name" placeholder="Введите ваше ФИО" value="{{ form.full_name.value|default_if_none:'' }}">
-                    
-                    <label for="id_username">Логин</label>
-                    <input type="text" id="id_username" name="username" placeholder="Введите ваш логин" value="{{ form.username.value|default_if_none:'' }}">
-                    
-                    <label for="id_email">Email</label>
-                    <input type="email" id="id_email" name="email" placeholder="Введите ваш email" value="{{ form.email.value|default_if_none:'' }}">
-                    
-                    <label for="id_password1">Пароль</label>
-                    <input type="password" id="id_password1" name="password1" placeholder="Введите пароль">
-                    
-                    <label for="id_password2">Подтверждение пароля</label>
-                    <input type="password" id="id_password2" name="password2" placeholder="Подтвердите пароль">
-                    
-                    <label class="checkbox-label">
-                        <input type="checkbox"> Согласие на обработку персональных данных
-                    </label>
-                    <button type="submit" class="button_lk">Зарегистрироваться</button>
-                </form>
+{% block title %}Регистрация{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-box">
+        <h2>Регистрация</h2>
+        <form method="post" class="auth-form">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="id_full_name">ФИО</label>
+                <input type="text" id="id_full_name" name="full_name" placeholder="Введите ваше ФИО" value="{{ form.full_name.value|default_if_none:'' }}">
             </div>
+
+            <div class="form-group">
+                <label for="id_username">Логин</label>
+                <input type="text" id="id_username" name="username" placeholder="Введите ваш логин" value="{{ form.username.value|default_if_none:'' }}">
+            </div>
+
+            <div class="form-group">
+                <label for="id_email">Email</label>
+                <input type="email" id="id_email" name="email" placeholder="Введите ваш email" value="{{ form.email.value|default_if_none:'' }}">
+            </div>
+
+            <div class="form-group">
+                <label for="id_password1">Пароль</label>
+                <input type="password" id="id_password1" name="password1" placeholder="Введите пароль">
+            </div>
+
+            <div class="form-group">
+                <label for="id_password2">Подтверждение пароля</label>
+                <input type="password" id="id_password2" name="password2" placeholder="Повторите пароль">
+            </div>
+
+            <label class="checkbox-label">
+                <input type="checkbox"> Согласие на обработку персональных данных
+            </label>
+            <button type="submit" class="btn-primary">Зарегистрироваться</button>
+        </form>
+        <div class="auth-links">
+            <p>Уже есть аккаунт? <a href="{% url 'authorization' %}">Войти</a></p>
         </div>
     </div>
+</div>
 
-    <div class="footer">
-        Политика конфиденциальности
-    </div>
-    <script>
-        function toggleMenu() {
-            const nav = document.querySelector('.nav');
-            nav.classList.toggle('active');
-        }
-    </script>
-</body>
-</html>
+<style>
+.auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 200px);
+    padding: 20px;
+}
+
+.auth-box {
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+}
+
+.auth-box h2 {
+    text-align: center;
+    margin-bottom: 30px;
+    color: #333;
+}
+
+.auth-form .form-group {
+    margin-bottom: 20px;
+}
+
+.auth-form label {
+    display: block;
+    margin-bottom: 5px;
+    color: #555;
+}
+
+.auth-form input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+.auth-form input:focus {
+    outline: none;
+    border-color: #4CAF50;
+}
+
+.btn-primary {
+    width: 100%;
+    padding: 12px;
+    background-color: #a8d0e6;
+    color: black;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn-primary:hover {
+    background-color: #8fb8d1;
+}
+
+.auth-links {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.auth-links a {
+    color: #a8d0e6;
+    text-decoration: none;
+}
+
+.auth-links a:hover {
+    text-decoration: underline;
+}
+
+{% if form.errors %}
+.error-message {
+    color: #dc3545;
+    margin-top: 5px;
+    font-size: 14px;
+}
+{% endif %}
+</style>
+{% endblock %}

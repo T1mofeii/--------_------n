@@ -4,47 +4,505 @@
 {% block title %}Личный кабинет{% endblock %}
 
 {% block content %}
-<div class="content">
-    <div class="user-info">
-        <h2>Личный кабинет</h2>
-        <p>Имя пользователя: {{ user.username }}</p>
-        <p>Email: {{ user.email }}</p>
-        {% if user.phone %}
-        <p>Телефон: {{ user.phone }}</p>
-        {% endif %}
-    </div>
+<div class="container">
+    <h1>Личный кабинет</h1>
 
-    <div class="requests-box">
-        <h3>Ваши заявки</h3>
-        {% if problems %}
-        <div class="requests">
-            {% for problem in problems %}
-            <div class="request">
-                <h4>{{ problem.title }}</h4>
-                <p class="request-description">{{ problem.description }}</p>
-                <p>Категория: {{ problem.get_category_display }}</p>
-                <p>Дата: {{ problem.timestamp|date:"d.m.Y H:i" }}</p>
-                <p>Статус: {% if problem.is_solved %}Решена{% else %}В обработке{% endif %}</p>
-                <div class="request-images">
-                    {% if problem.image_before %}
-                    <div class="image-container">
-                        <h5>До:</h5>
-                        <img src="{{ problem.image_before.url }}" alt="До" class="request-image">
+    {% if user.is_staff %}
+        <!-- Секция управления категориями -->
+        <div class="admin-section">
+            <h2>Управление категориями</h2>
+            <form method="post" class="category-form">
+                {% csrf_token %}
+                <div class="form-group">
+                    {{ category_form.as_p }}
+                    <button type="submit" name="category_form" class="btn-primary">Добавить категорию</button>
+                </div>
+            </form>
+
+            <div class="categories-list">
+                <h3>Существующие категории:</h3>
+                <div class="categories-grid">
+                    {% for category in categories %}
+                    <div class="category-card">
+                        <span class="category-name">{{ category.name }}</span>
+                        <form method="post" class="delete-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="category_id" value="{{ category.id }}">
+                            <button type="submit" name="delete_category" class="btn-delete" 
+                                    onclick="return confirm('Удалить категорию?')">
+                                ✕
+                            </button>
+                        </form>
                     </div>
-                    {% endif %}
-                    {% if problem.is_solved and problem.image_after %}
-                    <div class="image-container">
-                        <h5>После:</h5>
-                        <img src="{{ problem.image_after.url }}" alt="После" class="request-image">
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Секция всех заявок -->
+        <div class="all-problems">
+            <h2>Все заявки</h2>
+            {% for problem in all_problems %}
+            <div class="problem-card">
+                <div class="problem-header">
+                    <h3>Заявка #{{ problem.id }}</h3>
+                    <span class="date">{{ problem.created_at|date:"d.m.Y H:i" }}</span>
+                </div>
+
+                <div class="current-status-section">
+                    <div class="status-badge {% if problem.status == 'solved' %}status-solved{% elif problem.status == 'rejected' %}status-rejected{% elif problem.status == 'approved' %}status-approved{% elif problem.status == 'pending' %}status-pending{% endif %}">
+                        {% if problem.status == 'solved' %}
+                            Решена
+                        {% elif problem.status == 'rejected' %}
+                            Отклонена
+                        {% elif problem.status == 'approved' %}
+                            Одобрена
+                        {% elif problem.status == 'pending' %}
+                            На рассмотрении
+                        {% endif %}
                     </div>
+                    {% if problem.status == 'rejected' and problem.rejection_reason %}
+                        <div class="rejection-reason">
+                            <strong>Причина отклонения:</strong>
+                            <p>{{ problem.rejection_reason }}</p>
+                        </div>
                     {% endif %}
+                </div>
+
+                <div class="problem-content">
+                    <div class="problem-info">
+                        <p><strong>Категория:</strong> {{ problem.category.name }}</p>
+                        <p><strong>Автор:</strong> {{ problem.user.username }}</p>
+                        <p class="description"><strong>Описание:</strong> {{ problem.description }}</p>
+                        <p><strong>Статус:</strong> {{ problem.get_status_display }}</p>
+                    </div>
+                    
+                    <div class="problem-images-container">
+                        <div class="image-comparison">
+                            <div class="image-wrapper after">
+                                {% if problem.image_after %}
+                                    <img src="{{ problem.image_after.url }}" alt="После" class="comparison-image">
+                                    <span class="image-label">После</span>
+                                {% endif %}
+                            </div>
+                            <div class="image-wrapper before">
+                                <img src="{{ problem.image_before.url }}" alt="До" class="comparison-image">
+                                <span class="image-label">До</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form method="post" enctype="multipart/form-data" class="problem-update-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="problem_id" value="{{ problem.id }}">
+                        <div class="status-form">
+                            <div class="form-group">
+                                <label for="id_status_{{ problem.id }}">Изменить статус:</label>
+                                <select name="status" id="id_status_{{ problem.id }}" class="form-control status-select" 
+                                        onchange="toggleRejectionReason(this, '{{ problem.id }}')">
+                                    {% for value, label in problem_update_form.fields.status.choices %}
+                                    <option value="{{ value }}" {% if problem.status == value %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="form-group rejection-reason-group" id="rejection_reason_group_{{ problem.id }}" 
+                                 style="display: {% if problem.status == 'rejected' %}block{% else %}none{% endif %};">
+                                <label for="id_rejection_reason_{{ problem.id }}">Причина отклонения:</label>
+                                <textarea name="rejection_reason" id="id_rejection_reason_{{ problem.id }}" 
+                                          class="form-control">{{ problem.rejection_reason }}</textarea>
+                            </div>
+
+                            <div class="form-group image-after-group">
+                                <label for="id_image_after_{{ problem.id }}">Фото "После" (обязательно для решения):</label>
+                                {% if problem.image_after %}
+                                    <p class="current-image">Текущее фото загружено</p>
+                                {% endif %}
+                                <input type="file" name="image_after" id="id_image_after_{{ problem.id }}" 
+                                       class="form-control" accept="image/*">
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="submit" name="problem_update" class="btn-primary">
+                                    Обновить статус
+                                </button>
+                            </div>
+                        </div>
+                    </form>
                 </div>
             </div>
             {% endfor %}
         </div>
-        {% else %}
-        <p>У вас пока нет заявок. <a href="{% url 'create_application' %}">Создать заявку</a></p>
-        {% endif %}
-    </div>
+    {% else %}
+        <!-- Секция заявок пользователя -->
+        <div class="user-problems">
+            <h2>Ваши заявки</h2>
+            {% for problem in user_problems %}
+            <div class="problem-card">
+                <div class="problem-header">
+                    <h3>{{ problem.title }}</h3>
+                    <span class="status-badge {{ problem.status }}">{{ problem.get_status_display }}</span>
+                </div>
+                
+                <div class="problem-info">
+                    <p><strong>Категория:</strong> {{ problem.category.name }}</p>
+                    <p class="description"><strong>Описание:</strong> {{ problem.description }}</p>
+                    <p><strong>Статус:</strong> {{ problem.get_status_display }}</p>
+                    
+                    {% if problem.status == 'rejected' %}
+                        <p class="rejection-reason"><strong>Причина отклонения:</strong> {{ problem.rejection_reason }}</p>
+                    {% endif %}
+                </div>
+                
+                <div class="problem-images-container">
+                    <div class="image-comparison">
+                        <div class="image-wrapper after">
+                            {% if problem.image_after %}
+                                <img src="{{ problem.image_after.url }}" alt="После" class="comparison-image">
+                                <span class="image-label">После</span>
+                            {% endif %}
+                        </div>
+                        <div class="image-wrapper before">
+                            <img src="{{ problem.image_before.url }}" alt="До" class="comparison-image">
+                            <span class="image-label">До</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% endif %}
 </div>
+
+<style>
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    /* Стили для админ-панели */
+    .admin-section {
+        background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+        padding: 25px;
+        border-radius: 15px;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .category-form {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+
+    .categories-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 15px;
+        margin-top: 20px;
+    }
+
+    .category-card {
+        background: white;
+        padding: 15px;
+        border-radius: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        transition: transform 0.2s;
+    }
+
+    .category-card:hover {
+        transform: translateY(-2px);
+    }
+
+    /* Стили для карточек заявок */
+    .problem-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 25px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s;
+    }
+
+    .problem-card:hover {
+        transform: translateY(-3px);
+    }
+
+    .problem-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+    .status-badge {
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.9em;
+        font-weight: 500;
+    }
+
+    .status-badge.pending { background: #ffd700; color: #000; }
+    .status-badge.approved { background: #28a745; color: white; }
+    .status-badge.rejected { background: #dc3545; color: white; }
+    .status-badge.solved { background: #17a2b8; color: white; }
+
+    /* Стили для изображений с анимацией */
+    .problem-images-container {
+        margin: 20px 0;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .image-comparison {
+        position: relative;
+        width: 100%;
+        height: 300px;
+        overflow: hidden;
+    }
+
+    .image-wrapper {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        transition: opacity 0.5s ease-in-out;
+    }
+
+    .image-wrapper.before {
+        opacity: 0;
+    }
+
+    .image-comparison:hover .image-wrapper.before {
+        opacity: 1;
+    }
+
+    .comparison-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 8px;
+    }
+
+    .image-label {
+        position: absolute;
+        bottom: 10px;
+        left: 10px;
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 5px 10px;
+        border-radius: 4px;
+        font-size: 0.9em;
+    }
+
+    /* Кнопки */
+    .btn-primary {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .btn-primary:hover {
+        background: #0056b3;
+    }
+
+    .btn-delete {
+        background: #dc3545;
+        color: white;
+        border: none;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s;
+    }
+
+    .btn-delete:hover {
+        background: #c82333;
+    }
+
+    /* Формы */
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    .problem-update-form {
+        margin-top: 20px;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .status-form {
+        display: grid;
+        gap: 15px;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+
+    .status-select {
+        background-color: white;
+        cursor: pointer;
+    }
+
+    .current-image {
+        font-size: 0.9em;
+        color: #666;
+        margin: 5px 0;
+    }
+
+    .form-actions {
+        margin-top: 15px;
+    }
+
+    .btn-primary {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .btn-primary:hover {
+        background: #0056b3;
+    }
+
+    /* Стили для сообщений об ошибках */
+    .errorlist {
+        color: #dc3545;
+        list-style: none;
+        padding: 0;
+        margin: 5px 0;
+        font-size: 0.9em;
+    }
+
+    /* Адаптивность */
+    @media (max-width: 768px) {
+        .categories-grid {
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        }
+
+        .problem-card {
+            padding: 15px;
+        }
+
+        .image-comparison {
+            height: 200px;
+        }
+    }
+
+    /* Стили для текущего статуса */
+    .current-status-section {
+        margin: 15px 0;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-weight: 500;
+        font-size: 14px;
+        text-transform: uppercase;
+        margin-right: 10px;
+    }
+
+    .status-solved {
+        background-color: #28a745;
+        color: white;
+    }
+
+    .status-approved {
+        background-color: #17a2b8;
+        color: white;
+    }
+
+    .status-rejected {
+        background-color: #dc3545;
+        color: white;
+    }
+
+    .status-pending {
+        background-color: #ffc107;
+        color: #000;
+    }
+
+    .rejection-reason {
+        margin-top: 10px;
+        padding: 10px;
+        background: #fff5f5;
+        border-radius: 5px;
+        border-left: 4px solid #dc3545;
+    }
+
+    .rejection-reason strong {
+        color: #dc3545;
+        display: block;
+        margin-bottom: 5px;
+    }
+
+    .rejection-reason p {
+        margin: 0;
+        color: #666;
+    }
+</style>
+
+<script>
+    // Добавляем плавную анимацию при скролле
+    document.addEventListener('DOMContentLoaded', function() {
+        const problemCards = document.querySelectorAll('.problem-card');
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, {
+            threshold: 0.1
+        });
+
+        problemCards.forEach(card => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+            observer.observe(card);
+        });
+    });
+
+    function toggleRejectionReason(select, problemId) {
+        const rejectionGroup = document.getElementById(`rejection_reason_group_${problemId}`);
+        if (select.value === 'rejected') {
+            rejectionGroup.style.display = 'block';
+        } else {
+            rejectionGroup.style.display = 'none';
+        }
+    }
+</script>
 {% endblock %}
