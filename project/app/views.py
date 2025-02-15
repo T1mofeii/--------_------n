@@ -36,10 +36,33 @@ def create_application(request):
 
 @login_required
 def lk(request):
+    # Получаем параметры фильтрации
+    status_filter = request.GET.get('status')
+    date_sort = request.GET.get('date_sort')
+    
+    # Базовый QuerySet для проблем пользователя
     user_problems = Problem.objects.filter(user=request.user)
     
+    # Применяем фильтр по статусу
+    if status_filter:
+        user_problems = user_problems.filter(status=status_filter)
+    
+    # Применяем сортировку по дате
+    if date_sort == 'asc':
+        user_problems = user_problems.order_by('created_at')
+    else:
+        user_problems = user_problems.order_by('-created_at')
+    
     if request.user.is_staff:
-        all_problems = Problem.objects.all().order_by('-created_at')
+        # Для администратора также фильтруем все проблемы
+        all_problems = Problem.objects.all()
+        if status_filter:
+            all_problems = all_problems.filter(status=status_filter)
+        if date_sort == 'asc':
+            all_problems = all_problems.order_by('created_at')
+        else:
+            all_problems = all_problems.order_by('-created_at')
+            
         categories = Category.objects.all()
         
         if request.method == 'POST':
@@ -56,7 +79,6 @@ def lk(request):
                 if form.is_valid():
                     new_status = form.cleaned_data['status']
                     
-                    # Проверяем только для отклонения причину
                     if new_status == 'rejected' and not form.cleaned_data.get('rejection_reason'):
                         messages.error(request, 'Для отклонения заявки необходимо указать причину')
                         return redirect('lk')
@@ -76,10 +98,14 @@ def lk(request):
             'categories': categories,
             'category_form': category_form,
             'problem_update_form': ProblemUpdateForm(),
+            'current_status': status_filter,
+            'current_date_sort': date_sort,
         }
     else:
         context = {
             'user_problems': user_problems,
+            'current_status': status_filter,
+            'current_date_sort': date_sort,
         }
     
     return render(request, 'app/Lk.html', context)

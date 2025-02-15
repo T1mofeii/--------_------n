@@ -5,14 +5,16 @@
 
 {% block content %}
 <div class="content">
-    <div class="form-container-box">
-        <h2 style="font-size: 24px; text-align: center;">Выход</h2>
-        <div class="form-container">
-            <p>Вы уверены, что хотите выйти?</p>
-            <form method="post" action="{% url 'logout' %}">
-                {% csrf_token %}
-                <button type="submit" class="button_lk">Выйти</button>
-            </form>
+    <div class="auth-container">
+        <div class="auth-box">
+            <h2 class="section-title">Выход</h2>
+            <div class="form-container">
+                <p>Вы уверены, что хотите выйти?</p>
+                <form method="post" action="{% url 'logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="button_lk">Выйти</button>
+                </form>
+            </div>
         </div>
     </div>
 </div>
