@@ -7,7 +7,15 @@
 <div class="container">
     <h1>Личный кабинет</h1>
 
-    {% if user.is_staff %}
+    {% if user.is_authenticated %}
+        <div class="user-info">
+            <p>Логин: {{ request.user.username }}</p>
+            <p>Email: {{ request.user.email }}</p>
+            <p>ФИО: {{ request.user.full_name }}</p>
+        </div>
+    {% endif %}
+
+    {% if request.user.is_staff %}
         <!-- Секция управления категориями -->
         <div class="admin-section">
             <h2>Управление категориями</h2>

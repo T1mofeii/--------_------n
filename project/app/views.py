@@ -93,6 +93,7 @@ def lk(request):
         
         category_form = CategoryForm()
         context = {
+            'user': request.user,
             'user_problems': user_problems,
             'all_problems': all_problems,
             'categories': categories,
@@ -103,6 +104,7 @@ def lk(request):
         }
     else:
         context = {
+            'user': request.user,
             'user_problems': user_problems,
             'current_status': status_filter,
             'current_date_sort': date_sort,

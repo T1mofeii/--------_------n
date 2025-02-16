@@ -185,7 +185,7 @@ main {
     max-width: 500px;
     margin: 20px auto;
     padding: 20px;
-    background-color: #f8f9fa;
+    background-color: #a8d0e6;
     border-radius: 10px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
@@ -291,7 +291,7 @@ main {
     max-width: 600px;
     margin: 40px auto;
     padding: 30px;
-    background-color: #f8f9fa;
+    background-color: #a8d0e6;
     border-radius: 10px;
     box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
 }
@@ -404,7 +404,7 @@ main {
 }
 
 .problem-card {
-    background: white;
+    background: #a8d0e6;
     border-radius: 12px;
     padding: 20px;
     margin-bottom: 25px;
@@ -530,6 +530,15 @@ main {
     transition: background 0.2s;
 }
 
+.auth-boxx{
+    background: #a8d0e6;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+}
+
 .btn-primary:hover {
     background: #0056b3;
 }
@@ -599,7 +608,7 @@ main {
 
 /* Стили для формы фильтрации */
 .filter-section {
-    background-color: #f8f9fa;
+    background-color: #a8d0e6;
     padding: 20px;
     border-radius: 8px;
     margin-bottom: 20px;

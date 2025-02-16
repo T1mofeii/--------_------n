@@ -5,6 +5,7 @@ from django.utils import timezone
 class CustomUser(AbstractUser):
     phone = models.CharField(max_length=20, blank=True, null=True)
     profile_picture = models.ImageField(upload_to='profile_pics/', blank=True, null=True)
+    full_name = models.CharField(max_length=255, blank=True, null=True)
 
     def __str__(self):
         return self.username

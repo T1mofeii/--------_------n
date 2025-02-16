@@ -4,10 +4,11 @@ from .models import CustomUser, Problem, Category
 
 class RegistrationForm(UserCreationForm):
     phone = forms.CharField(required=False, label="Номер телефона")
+    full_name = forms.CharField(required=False, label='ФИО')
 
     class Meta:
         model = CustomUser
-        fields = ['username', 'email', 'phone', 'password1', 'password2']
+        fields = ['username', 'email', 'phone', 'full_name', 'password1', 'password2']
 
 class LoginForm(AuthenticationForm):
     username = forms.CharField(label="Логин", widget=forms.TextInput())
