@@ -131,6 +131,8 @@
                             {% endif %}
 
                             <button type="submit" name="problem_update" class="btn-primary" value="problem_update">Обновить</button>
+                            <button type="button" class="delete-btn"
+                            onclick="deleteApplication({{ problem.id }})">Удалить заявку</button>
                         </div>
                     </form>
                 </div>
@@ -234,12 +236,15 @@
                             </div>
                         </div>
                     </div>
+                    <button type="button" onclick="deleteApplication({{ problem.id }})">Удалить заявку</button>
                 </div>
             </div>
             {% endfor %}
         </div>
     {% endif %}
 </div>
+
+<meta name="csrf-token" content="{{ csrf_token }}">
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -269,6 +274,28 @@
         } else {
             rejectionReasonDiv.style.display = 'none';
         }
+    }
+
+    function deleteApplication(applicationId) {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        
+        fetch(`/delete-application/${applicationId}/`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
+            },
+        })
+        .then(response => {
+            if (response.ok) {
+                location.reload(); // Refresh the page to see the changes
+            } else {
+                alert('Ошибка при удалении заявки');
+            }
+        })
+        .catch(error => {
+            console.error('Ошибка:', error);
+        });
     }
 </script>
 {% endblock %}

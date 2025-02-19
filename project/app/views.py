@@ -7,6 +7,7 @@ from .models import Problem, Category
 from django.http import JsonResponse
 from django.contrib import messages
 
+
 def index(request):
     # Получаем 4 последние решенные заявки
     solved_problems = Problem.objects.filter(status='solved').order_by('-created_at')[:4]
@@ -142,3 +143,16 @@ def logout_view(request):
         logout(request)
         return redirect('index')
     return render(request, 'app/logout.html')
+
+from django.http import JsonResponse
+from .models import Problem  
+
+def delete_application(request, application_id):
+    if request.method == 'DELETE':
+        try:
+            problem = Problem.objects.get(id=application_id)
+            problem.delete()
+            return JsonResponse({'message': 'Заявка удалена'}, status=200)
+        except Problem.DoesNotExist:
+            return JsonResponse({'message': 'Заявка не найдена'}, status=404)
+    return JsonResponse({'message': 'Метод не разрешен'}, status=405)
