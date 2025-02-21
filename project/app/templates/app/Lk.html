@@ -15,6 +15,45 @@
         </div>
     {% endif %}
 
+    <!-- Форма фильтрации -->
+    <div class="filter-section">
+        <form method="get" class="filter-form">
+            <div class="filter-group">
+                <label>Статус:</label>
+                <div class="checkbox-group">
+                    <label>
+                        <input type="radio" name="status" value="" {% if not current_status %}checked{% endif %}>
+                        Все
+                    </label>
+                    <label>
+                        <input type="radio" name="status" value="pending" {% if current_status == 'pending' %}checked{% endif %}>
+                        Новая
+                    </label>
+                    <label>
+                        <input type="radio" name="status" value="solved" {% if current_status == 'solved' %}checked{% endif %}>
+                        Решенная
+                    </label>
+                </div>
+            </div>
+            
+            <div class="filter-group">
+                <label>Сортировка по дате:</label>
+                <div class="checkbox-group">
+                    <label>
+                        <input type="radio" name="date_sort" value="desc" {% if current_date_sort != 'asc' %}checked{% endif %}>
+                        Сначала новые
+                    </label>
+                    <label>
+                        <input type="radio" name="date_sort" value="asc" {% if current_date_sort == 'asc' %}checked{% endif %}>
+                        Сначала старые
+                    </label>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn-primary">Применить фильтры</button>
+        </form>
+    </div>
+
     {% if request.user.is_staff %}
         <!-- Секция управления категориями -->
         <div class="admin-section">
@@ -46,202 +85,211 @@
                 </div>
             </div>
         </div>
-
-        <!-- Секция всех заявок -->
-        <div class="all-problems">
-            <h2>Все заявки</h2>
-            {% for problem in all_problems %}
-            <div class="problem-card">
-                <div class="problem-header">
-                    <h3>Заявка #{{ problem.id }}</h3>
-                    <span class="date">{{ problem.created_at|date:"d.m.Y H:i" }}</span>
-                </div>
-
-                <div class="current-status-section">
-                    <div class="status-badge {% if problem.status == 'solved' %}status-solved{% elif problem.status == 'rejected' %}status-rejected{% elif problem.status == 'approved' %}status-approved{% elif problem.status == 'pending' %}status-pending{% endif %}">
-                        {% if problem.status == 'solved' %}
-                            Решена
-                        {% elif problem.status == 'rejected' %}
-                            Отклонена
-                        {% elif problem.status == 'approved' %}
-                            Одобрена
-                        {% elif problem.status == 'pending' %}
-                            На рассмотрении
-                        {% endif %}
-                    </div>
-                    {% if problem.status == 'rejected' and problem.rejection_reason %}
-                        <div class="rejection-reason">
-                            <strong>Причина отклонения:</strong>
-                            <p>{{ problem.rejection_reason }}</p>
-                        </div>
-                    {% endif %}
-                </div>
-
-                <div class="problem-content">
-                    <div class="problem-info">
-                        <p><strong>Категория:</strong> {{ problem.category.name }}</p>
-                        <p><strong>Автор:</strong> {{ problem.user.username }}</p>
-                        <p class="description"><strong>Описание:</strong> {{ problem.description }}</p>
-                        <p><strong>Статус:</strong> {{ problem.get_status_display }}</p>
-                    </div>
-                    
-                    <div class="problem-images-container">
-                        <div class="image-comparison">
-                            <div class="image-wrapper after">
-                                {% if problem.image_after %}
-                                    <img src="{{ problem.image_after.url }}" alt="После" class="comparison-image">
-                                    <span class="image-label">После</span>
-                                {% endif %}
-                            </div>
-                            <div class="image-wrapper before">
-                                <img src="{{ problem.image_before.url }}" alt="До" class="comparison-image">
-                                <span class="image-label">До</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <form method="post" enctype="multipart/form-data" class="problem-update-form">
-                        {% csrf_token %}
-                        <input type="hidden" name="problem_id" value="{{ problem.id }}">
-                        <div class="status-form">
-                            <div class="form-group">
-                                <label for="status_{{ problem.id }}">Изменить статус:</label>
-                                <select name="status" id="status_{{ problem.id }}" class="form-control" 
-                                        onchange="toggleRejectionReason(this, {{ problem.id }})">
-                                    <option value="pending" {% if problem.status == 'pending' %}selected{% endif %}>На рассмотрении</option>
-                                    <option value="approved" {% if problem.status == 'approved' %}selected{% endif %}>Одобрена</option>
-                                    <option value="rejected" {% if problem.status == 'rejected' %}selected{% endif %}>Отклонена</option>
-                                    <option value="solved" {% if problem.status == 'solved' %}selected{% endif %}>Решена</option>
-                                </select>
-                            </div>
-
-                            <div id="rejection_reason_{{ problem.id }}" class="form-group" 
-                                 style="display: {% if problem.status == 'rejected' %}block{% else %}none{% endif %};">
-                                <label for="rejection_reason_input_{{ problem.id }}">Причина отклонения:</label>
-                                <textarea name="rejection_reason" id="rejection_reason_input_{{ problem.id }}" 
-                                          class="form-control">{{ problem.rejection_reason }}</textarea>
-                            </div>
-
-                            {% if problem.status != 'solved' %}
-                                <div class="form-group">
-                                    <label for="image_after_{{ problem.id }}">Добавить фото "После":</label>
-                                    <input type="file" name="image_after" id="image_after_{{ problem.id }}" 
-                                           class="form-control-file" accept="image/*">
-                                </div>
-                            {% endif %}
-
-                            <button type="submit" name="problem_update" class="btn-primary" value="problem_update">Обновить</button>
-                            <button type="button" class="delete-btn"
-                            onclick="deleteApplication({{ problem.id }})">Удалить заявку</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    {% else %}
-        <!-- Секция заявок пользователя -->
-        <div class="user-problems">
-            <h2>Ваши заявки</h2>
-            
-            <!-- Форма фильтрации -->
-            <div class="filter-section">
-                <form method="get" class="filter-form">
-                    <div class="filter-group">
-                        <label>Статус:</label>
-                        <div class="checkbox-group">
-                            <label>
-                                <input type="radio" name="status" value="" 
-                                       {% if not current_status %}checked{% endif %}>
-                                Все
-                            </label>
-                            <label>
-                                <input type="radio" name="status" value="pending" 
-                                       {% if current_status == 'pending' %}checked{% endif %}>
-                                Новая
-                            </label>
-                            <label>
-                                <input type="radio" name="status" value="solved" 
-                                       {% if current_status == 'solved' %}checked{% endif %}>
-                                Решенная
-                            </label>
-                        </div>
-                    </div>
-                    
-                    <div class="filter-group">
-                        <label>Сортировка по дате:</label>
-                        <div class="checkbox-group">
-                            <label>
-                                <input type="radio" name="date_sort" value="desc" 
-                                       {% if current_date_sort != 'asc' %}checked{% endif %}>
-                                Сначала новые
-                            </label>
-                            <label>
-                                <input type="radio" name="date_sort" value="asc" 
-                                       {% if current_date_sort == 'asc' %}checked{% endif %}>
-                                Сначала старые
-                            </label>
-                        </div>
-                    </div>
-                    
-                    <button type="submit" class="btn-primary">Применить фильтры</button>
-                </form>
-            </div>
-
-            {% for problem in user_problems %}
-            <div class="problem-card">
-                <div class="problem-header">
-                    <h3>Заявка #{{ problem.id }}</h3>
-                    <span class="date">{{ problem.created_at|date:"d.m.Y H:i" }}</span>
-                </div>
-
-                <div class="current-status-section">
-                    <div class="status-badge {% if problem.status == 'solved' %}status-solved{% elif problem.status == 'rejected' %}status-rejected{% elif problem.status == 'approved' %}status-approved{% elif problem.status == 'pending' %}status-pending{% endif %}">
-                        {% if problem.status == 'solved' %}
-                            Решена
-                        {% elif problem.status == 'rejected' %}
-                            Отклонена
-                        {% elif problem.status == 'approved' %}
-                            Одобрена
-                        {% elif problem.status == 'pending' %}
-                            На рассмотрении
-                        {% endif %}
-                    </div>
-                    {% if problem.status == 'rejected' and problem.rejection_reason %}
-                        <div class="rejection-reason">
-                            <strong>Причина отклонения:</strong>
-                            <p>{{ problem.rejection_reason }}</p>
-                        </div>
-                    {% endif %}
-                </div>
-
-                <div class="problem-content">
-                    <div class="problem-info">
-                        <p><strong>Категория:</strong> {{ problem.category.name }}</p>
-                        <p class="description"><strong>Описание:</strong> {{ problem.description }}</p>
-                        <p><strong>Статус:</strong> {{ problem.get_status_display }}</p>
-                    </div>
-                    
-                    <div class="problem-images-container">
-                        <div class="image-comparison">
-                            <div class="image-wrapper after">
-                                {% if problem.image_after %}
-                                    <img src="{{ problem.image_after.url }}" alt="После" class="comparison-image">
-                                    <span class="image-label">После</span>
-                                {% endif %}
-                            </div>
-                            <div class="image-wrapper before">
-                                <img src="{{ problem.image_before.url }}" alt="До" class="comparison-image">
-                                <span class="image-label">До</span>
-                            </div>
-                        </div>
-                    </div>
-                    <button type="button" onclick="deleteApplication({{ problem.id }})">Удалить заявку</button>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
     {% endif %}
+
+    <!-- Секция заявок -->
+    <div class="problems-section">
+        <h2>Заявки</h2>
+        {% if request.user.is_staff %}
+            {% for problem in all_problems %}
+                <div class="problem-card">
+                    <div class="problem-header">
+                        <h3>Заявка #{{ problem.id }}</h3>
+                        <span class="date">{{ problem.created_at|date:"d.m.Y H:i" }}</span>
+                    </div>
+
+                    <div class="current-status-section">
+                        <div class="status-badge {% if problem.status == 'solved' %}status-solved{% elif problem.status == 'rejected' %}status-rejected{% elif problem.status == 'approved' %}status-approved{% elif problem.status == 'pending' %}status-pending{% endif %}">
+                            {% if problem.status == 'solved' %}
+                                Решена
+                            {% elif problem.status == 'rejected' %}
+                                Отклонена
+                            {% elif problem.status == 'approved' %}
+                                Одобрена
+                            {% elif problem.status == 'pending' %}
+                                На рассмотрении
+                            {% endif %}
+                        </div>
+                        {% if problem.status == 'rejected' and problem.rejection_reason %}
+                            <div class="rejection-reason">
+                                <strong>Причина отклонения:</strong>
+                                <p>{{ problem.rejection_reason }}</p>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="problem-content">
+                        <div class="problem-info">
+                            <p><strong>Категория:</strong> {{ problem.category.name }}</p>
+                            <p class="description"><strong>Описание:</strong> {{ problem.description }}</p>
+                            <p><strong>Статус:</strong> {{ problem.get_status_display }}</p>
+                        </div>
+                        
+                        <div class="problem-images-container">
+                            <div class="image-comparison">
+                                <div class="image-wrapper after">
+                                    {% if problem.image_after %}
+                                        <img src="{{ problem.image_after.url }}" alt="После" class="comparison-image">
+                                        <span class="image-label">После</span>
+                                    {% endif %}
+                                </div>
+                                <div class="image-wrapper before">
+                                    <img src="{{ problem.image_before.url }}" alt="До" class="comparison-image">
+                                    <span class="image-label">До</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% if request.user.is_staff %}
+                            {% if problem.status != 'solved' and problem.status != 'rejected' %}
+                                <form method="post" enctype="multipart/form-data" class="problem-update-form">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="problem_id" value="{{ problem.id }}">
+                                    <div class="status-form">
+                                        <div class="form-group">
+                                            <label for="status_{{ problem.id }}">Изменить статус:</label>
+                                            <select name="status" id="status_{{ problem.id }}" class="form-control" 
+                                                    onchange="toggleRejectionReason(this, {{ problem.id }})">
+                                                <option value="pending" {% if problem.status == 'pending' %}selected{% endif %}>На рассмотрении</option>
+                                                <option value="approved" {% if problem.status == 'approved' %}selected{% endif %}>Одобрена</option>
+                                                <option value="rejected" {% if problem.status == 'rejected' %}selected{% endif %}>Отклонена</option>
+                                                <option value="solved" {% if problem.status == 'solved' %}selected{% endif %}>Решена</option>
+                                            </select>
+                                        </div>
+
+                                        <div id="rejection_reason_{{ problem.id }}" class="form-group" 
+                                             style="display: {% if problem.status == 'rejected' %}block{% else %}none{% endif %};">
+                                            <label for="rejection_reason_input_{{ problem.id }}">Причина отклонения:</label>
+                                            <textarea name="rejection_reason" id="rejection_reason_input_{{ problem.id }}" 
+                                                      class="form-control">{{ problem.rejection_reason }}</textarea>
+                                        </div>
+
+                                        {% if problem.status != 'solved' %}
+                                            <div class="form-group">
+                                                <label for="image_after_{{ problem.id }}">Добавить фото "После":</label>
+                                                <input type="file" name="image_after" id="image_after_{{ problem.id }}" 
+                                                       class="form-control-file" accept="image/*">
+                                            </div>
+                                        {% endif %}
+
+                                        <button type="submit" name="problem_update" class="btn-primary" value="problem_update">Обновить</button>
+                                        {% if problem.status != 'solved' and problem.status != 'rejected' %}
+                                            <button type="button" class="delete-btn"
+                                            onclick="deleteApplication({{ problem.id }})">Удалить заявку</button>
+                                        {% endif %}
+                                    </div>
+                                </form>
+                            {% endif %}
+                        {% else %}
+                            {% if problem.status != 'solved' and problem.status != 'rejected' %}
+                                <button type="button" class="delete-btn"
+                                onclick="deleteApplication({{ problem.id }})">Удалить заявку</button>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            {% for problem in user_problems %}
+                <div class="problem-card">
+                    <div class="problem-header">
+                        <h3>Заявка #{{ problem.id }}</h3>
+                        <span class="date">{{ problem.created_at|date:"d.m.Y H:i" }}</span>
+                    </div>
+
+                    <div class="current-status-section">
+                        <div class="status-badge {% if problem.status == 'solved' %}status-solved{% elif problem.status == 'rejected' %}status-rejected{% elif problem.status == 'approved' %}status-approved{% elif problem.status == 'pending' %}status-pending{% endif %}">
+                            {% if problem.status == 'solved' %}
+                                Решена
+                            {% elif problem.status == 'rejected' %}
+                                Отклонена
+                            {% elif problem.status == 'approved' %}
+                                Одобрена
+                            {% elif problem.status == 'pending' %}
+                                На рассмотрении
+                            {% endif %}
+                        </div>
+                        {% if problem.status == 'rejected' and problem.rejection_reason %}
+                            <div class="rejection-reason">
+                                <strong>Причина отклонения:</strong>
+                                <p>{{ problem.rejection_reason }}</p>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="problem-content">
+                        <div class="problem-info">
+                            <p><strong>Категория:</strong> {{ problem.category.name }}</p>
+                            <p class="description"><strong>Описание:</strong> {{ problem.description }}</p>
+                            <p><strong>Статус:</strong> {{ problem.get_status_display }}</p>
+                        </div>
+                        
+                        <div class="problem-images-container">
+                            <div class="image-comparison">
+                                <div class="image-wrapper after">
+                                    {% if problem.image_after %}
+                                        <img src="{{ problem.image_after.url }}" alt="После" class="comparison-image">
+                                        <span class="image-label">После</span>
+                                    {% endif %}
+                                </div>
+                                <div class="image-wrapper before">
+                                    <img src="{{ problem.image_before.url }}" alt="До" class="comparison-image">
+                                    <span class="image-label">До</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% if request.user.is_staff %}
+                            {% if problem.status != 'solved' and problem.status != 'rejected' %}
+                                <form method="post" enctype="multipart/form-data" class="problem-update-form">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="problem_id" value="{{ problem.id }}">
+                                    <div class="status-form">
+                                        <div class="form-group">
+                                            <label for="status_{{ problem.id }}">Изменить статус:</label>
+                                            <select name="status" id="status_{{ problem.id }}" class="form-control" 
+                                                    onchange="toggleRejectionReason(this, {{ problem.id }})">
+                                                <option value="pending" {% if problem.status == 'pending' %}selected{% endif %}>На рассмотрении</option>
+                                                <option value="approved" {% if problem.status == 'approved' %}selected{% endif %}>Одобрена</option>
+                                                <option value="rejected" {% if problem.status == 'rejected' %}selected{% endif %}>Отклонена</option>
+                                                <option value="solved" {% if problem.status == 'solved' %}selected{% endif %}>Решена</option>
+                                            </select>
+                                        </div>
+
+                                        <div id="rejection_reason_{{ problem.id }}" class="form-group" 
+                                             style="display: {% if problem.status == 'rejected' %}block{% else %}none{% endif %};">
+                                            <label for="rejection_reason_input_{{ problem.id }}">Причина отклонения:</label>
+                                            <textarea name="rejection_reason" id="rejection_reason_input_{{ problem.id }}" 
+                                                      class="form-control">{{ problem.rejection_reason }}</textarea>
+                                        </div>
+
+                                        {% if problem.status != 'solved' %}
+                                            <div class="form-group">
+                                                <label for="image_after_{{ problem.id }}">Добавить фото "После":</label>
+                                                <input type="file" name="image_after" id="image_after_{{ problem.id }}" 
+                                                       class="form-control-file" accept="image/*">
+                                            </div>
+                                        {% endif %}
+
+                                        <button type="submit" name="problem_update" class="btn-primary" value="problem_update">Обновить</button>
+                                        {% if problem.status != 'solved' and problem.status != 'rejected' %}
+                                            <button type="button" class="delete-btn"
+                                            onclick="deleteApplication({{ problem.id }})">Удалить заявку</button>
+                                        {% endif %}
+                                    </div>
+                                </form>
+                            {% endif %}
+                        {% else %}
+                            {% if problem.status != 'solved' and problem.status != 'rejected' %}
+                                <button type="button" class="delete-btn"
+                                onclick="deleteApplication({{ problem.id }})">Удалить заявку</button>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
 </div>
 
 <meta name="csrf-token" content="{{ csrf_token }}">

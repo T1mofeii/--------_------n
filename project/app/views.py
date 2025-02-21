@@ -75,6 +75,12 @@ def lk(request):
             elif 'problem_update' in request.POST:
                 problem_id = request.POST.get('problem_id')
                 problem = Problem.objects.get(id=problem_id)
+                
+                # Проверяем, не является ли заявка уже решенной или отклоненной
+                if problem.status in ['solved', 'rejected']:
+                    messages.error(request, 'Нельзя изменить статус решенной или отклоненной заявки')
+                    return redirect('lk')
+                    
                 form = ProblemUpdateForm(request.POST, request.FILES, instance=problem)
                 
                 if form.is_valid():
@@ -151,6 +157,9 @@ def delete_application(request, application_id):
     if request.method == 'DELETE':
         try:
             problem = Problem.objects.get(id=application_id)
+            # Проверяем статус заявки
+            if problem.status in ['solved', 'rejected']:
+                return JsonResponse({'message': 'Нельзя удалить решенную или отклоненную заявку'}, status=403)
             problem.delete()
             return JsonResponse({'message': 'Заявка удалена'}, status=200)
         except Problem.DoesNotExist:
